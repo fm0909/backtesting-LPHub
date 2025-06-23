@@ -121,80 +121,49 @@ class UniswapV3LPCalculator:
             [self.upper_price + step_size]   # One point above upper bound
         ])
         
-        data = []
+        data = [{} for _ in range(len(extended_prices))]
         
-        for i, price in enumerate(extended_prices):
+        # Find the index of the initial price (closest match)
+        initial_idx = np.argmin(np.abs(extended_prices - self.initial_price))
+        
+        # Upwards sweep (initial price and above)
+        for i in range(initial_idx, len(extended_prices)):
+            price = extended_prices[i]
             sqrt_price = math.sqrt(price)
-            
-            # For prices outside the range, use the bound values
             if price <= self.lower_price:
-                # Use lower bound values
                 token0 = liquidity * (self.sqrt_upper - self.sqrt_lower) / (self.sqrt_lower * self.sqrt_upper)
-                token1 = 0  # All token1 has been converted to token0
+                token1 = 0
             elif price >= self.upper_price:
-                # Use upper bound values
-                token0 = 0  # All token0 has been converted to token1
+                token0 = 0
                 token1 = liquidity * (self.sqrt_upper - self.sqrt_lower)
             else:
-                # Normal calculation for prices within range
                 token0 = liquidity * (self.sqrt_upper - sqrt_price) / (sqrt_price * self.sqrt_upper)
                 token1 = liquidity * (sqrt_price - self.sqrt_lower)
-            
             total_value = token0 * price + token1
             token0_share = (token0 * price / total_value) * 100 if total_value > 0 else 0
-            
-            # Calculate price impact
-            if abs(price - self.initial_price) < 1e-6:
+            if i == initial_idx:
                 price_impact = 0.0
-            else:
-                # Use the previous price point for calculation
-                if i == 0:
-                    # First point (below lower bound) - use lower bound as prior price
-                    prior_price = self.lower_price
-                elif i == len(extended_prices) - 1:
-                    # Last point (above upper bound) - use upper bound as prior price
-                    prior_price = self.upper_price
-                else:
-                    prior_price = extended_prices[i-1]
-                price_impact = (price / prior_price - 1) * 100
-            
-            # Calculate incremental Impermanent Loss
-            if abs(price - self.initial_price) < 1e-6:
                 incremental_il = 0.0
+                prior_price = price
+                prior_total_value = total_value
             else:
-                # Use the previous price point for IL calculation
-                if i == 0:
-                    # First point (below lower bound) - use lower bound as prior price
-                    prior_price_for_il = self.lower_price
-                elif i == len(extended_prices) - 1:
-                    # Last point (above upper bound) - use upper bound as prior price
-                    prior_price_for_il = self.upper_price
-                else:
-                    prior_price_for_il = extended_prices[i-1]
-                
-                sqrt_prior_price = math.sqrt(prior_price_for_il)
-                
-                # Calculate prior token amounts (handle out-of-range cases)
-                if prior_price_for_il <= self.lower_price:
+                prior_price = extended_prices[i-1]
+                price_impact = (price / prior_price - 1) * 100
+                # IL calculation
+                sqrt_prior_price = math.sqrt(prior_price)
+                if prior_price <= self.lower_price:
                     prior_token0 = liquidity * (self.sqrt_upper - self.sqrt_lower) / (self.sqrt_lower * self.sqrt_upper)
                     prior_token1 = 0
-                elif prior_price_for_il >= self.upper_price:
+                elif prior_price >= self.upper_price:
                     prior_token0 = 0
                     prior_token1 = liquidity * (self.sqrt_upper - self.sqrt_lower)
                 else:
                     prior_token0 = liquidity * (self.sqrt_upper - sqrt_prior_price) / (sqrt_prior_price * self.sqrt_upper)
                     prior_token1 = liquidity * (sqrt_prior_price - self.sqrt_lower)
-                
-                prior_total_value = prior_token0 * prior_price_for_il + prior_token1
+                prior_total_value = prior_token0 * prior_price + prior_token1
                 incremental_il = (total_value / prior_total_value - 1) * 100
-            
-            # Calculate IL/Price Impact ratio
-            if abs(price_impact) < 1e-6:
-                il_price_ratio = 0.0
-            else:
-                il_price_ratio = (incremental_il / price_impact) * 100
-            
-            data.append({
+            il_price_ratio = (incremental_il / price_impact) * 100 if abs(price_impact) > 1e-6 else 0.0
+            data[i] = {
                 'price': price,
                 'token0': token0,
                 'token1': token1,
@@ -203,8 +172,49 @@ class UniswapV3LPCalculator:
                 'price_impact': price_impact,
                 'incremental_il': incremental_il,
                 'il_price_ratio': il_price_ratio
-            })
-        
+            }
+        # Downwards sweep (below initial price)
+        for i in range(initial_idx-1, -1, -1):
+            price = extended_prices[i]
+            sqrt_price = math.sqrt(price)
+            if price <= self.lower_price:
+                token0 = liquidity * (self.sqrt_upper - self.sqrt_lower) / (self.sqrt_lower * self.sqrt_upper)
+                token1 = 0
+            elif price >= self.upper_price:
+                token0 = 0
+                token1 = liquidity * (self.sqrt_upper - self.sqrt_lower)
+            else:
+                token0 = liquidity * (self.sqrt_upper - sqrt_price) / (sqrt_price * self.sqrt_upper)
+                token1 = liquidity * (sqrt_price - self.sqrt_lower)
+            total_value = token0 * price + token1
+            token0_share = (token0 * price / total_value) * 100 if total_value > 0 else 0
+            # Use the next price as prior (since we're moving down)
+            prior_price = extended_prices[i+1]
+            price_impact = (price / prior_price - 1) * 100
+            # IL calculation
+            sqrt_prior_price = math.sqrt(prior_price)
+            if prior_price <= self.lower_price:
+                prior_token0 = liquidity * (self.sqrt_upper - self.sqrt_lower) / (self.sqrt_lower * self.sqrt_upper)
+                prior_token1 = 0
+            elif prior_price >= self.upper_price:
+                prior_token0 = 0
+                prior_token1 = liquidity * (self.sqrt_upper - self.sqrt_lower)
+            else:
+                prior_token0 = liquidity * (self.sqrt_upper - sqrt_prior_price) / (sqrt_prior_price * self.sqrt_upper)
+                prior_token1 = liquidity * (sqrt_prior_price - self.sqrt_lower)
+            prior_total_value = prior_token0 * prior_price + prior_token1
+            incremental_il = (total_value / prior_total_value - 1) * 100
+            il_price_ratio = (incremental_il / price_impact) * 100 if abs(price_impact) > 1e-6 else 0.0
+            data[i] = {
+                'price': price,
+                'token0': token0,
+                'token1': token1,
+                'total_value': total_value,
+                'token0_share': token0_share,
+                'price_impact': price_impact,
+                'incremental_il': incremental_il,
+                'il_price_ratio': il_price_ratio
+            }
         return data
 
     def print_value_table(self, liquidity: float):
@@ -277,9 +287,9 @@ class UniswapV3LPCalculator:
         # Create the combined plot with smaller size for presentation
         plt.figure(figsize=(8, 6))
         
-        # Plot both scenarios with thicker lines for better visibility
-        plt.plot(token0_shares1, il_price_ratios1, alpha=0.8, linewidth=3, label=f'R=2 (Wide Range)', color='blue')
-        plt.plot(token0_shares2, il_price_ratios2, alpha=0.8, linewidth=3, label=f'R=1.2 (Tight Range)', color='red')
+        # Plot both scenarios with scatter dots for better visibility
+        plt.scatter(token0_shares1, il_price_ratios1, alpha=0.8, s=20, label=f'R=2 (Wide Range)', color='blue')
+        plt.scatter(token0_shares2, il_price_ratios2, alpha=0.8, s=20, label=f'R=1.2 (Tight Range)', color='red')
         
         plt.xlabel('Token 0 Share (%)', fontsize=14, fontweight='bold')
         plt.ylabel('IL/Price Impact (%)', fontsize=14, fontweight='bold')
@@ -368,13 +378,13 @@ def main():
     
     plt.figure(figsize=(8, 5))
     
-    # Plot all scenarios with thicker lines for better visibility
+    # Plot all scenarios with scatter dots for better visibility
     for i, (calculator, result, name, color) in enumerate(zip(calculators, results, scenario_names, colors)):
         data = calculator.calculate_price_range_data(result['liquidity'])
         token0_shares = [row['token0_share'] for row in data]
         il_price_ratios = [row['il_price_ratio'] for row in data]
         
-        plt.plot(token0_shares, il_price_ratios, alpha=0.8, linewidth=2, label=f'R={result["r_factor"]}', color=color)
+        plt.scatter(token0_shares, il_price_ratios, alpha=0.8, s=15, label=f'R={result["r_factor"]}', color=color)
     
     plt.xlabel('Token 0 Share (%)', fontsize=12, fontweight='bold')
     plt.ylabel('IL/Price Impact (%)', fontsize=12, fontweight='bold')
