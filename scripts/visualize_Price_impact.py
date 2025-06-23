@@ -213,8 +213,8 @@ def main():
     pool_address = '0x88e6a0c2ddd26feeb64f039a2c41296fcb3f5640'
     pool_address = pool_address.lower()  # Ensure lowercase for file matching
 
-    # Path to the data folder and input files
-    data_folder = os.path.join('data', pool_address)
+    # Load the data
+    data_folder = os.path.join('..', 'data', pool_address)
     bin_analysis_file = os.path.join(data_folder, f'price_impact_bin_analysis_{pool_address}.csv')
     filtered_metrics_file = os.path.join(data_folder, f'filtered_impact_metrics_{pool_address}.csv')
 

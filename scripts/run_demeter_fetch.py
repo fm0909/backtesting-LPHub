@@ -6,7 +6,7 @@ import pandas as pd
 import os
 
 # Step 1: Define fetch config
-config_file = "config.toml"  # TOML configuration file
+config_file = os.path.join("..", "config.toml")  # TOML configuration file
 
 # Step 2: Load and Debug Config
 config_data = toml.load(config_file)
@@ -15,7 +15,7 @@ print(config_data)
 
 # Get pool address from config and set output_dir accordingly
 pool_address = config_data['from']['uniswap']['pool_address'].lower()
-output_dir = os.path.join("./data", pool_address)
+output_dir = os.path.join("..", "data", pool_address)
 if not os.path.exists(output_dir):
     os.makedirs(output_dir, exist_ok=True)
 

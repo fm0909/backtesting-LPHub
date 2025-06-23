@@ -162,7 +162,7 @@ def main():
     pool_address = '0x88e6a0c2ddd26feeb64f039a2c41296fcb3f5640'
     
     # Construct input file path
-    input_file = os.path.join('data', pool_address, f'all_days_combined_{pool_address}.csv')
+    input_file = os.path.join('..', 'data', pool_address, f'all_days_combined_{pool_address}.csv')
     
     # Check if input file exists
     if not os.path.exists(input_file):

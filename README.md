@@ -4,13 +4,16 @@ This repository contains research tools and analysis scripts for blockchain data
 
 ## Project Structure
 
-- `run_demeter_fetch.py` - Script to fetch raw blockchain data using Demeter
-- `combine_minute_csvs.py` - Script to combine minute-level CSV data files into consolidated datasets
-- `visualize_Price_impact.py` - Visualization script for price impact analysis
-- `vpin_calculator.py` - VPIN calculation implementation
+- `scripts/` - Directory containing all analysis scripts
+  - `run_demeter_fetch.py` - Script to fetch raw blockchain data using Demeter
+  - `combine_minute_csvs.py` - Script to combine minute-level CSV data files into consolidated datasets
+  - `visualize_Price_impact.py` - Visualization script for price impact analysis
+  - `vpin_calculator.py` - VPIN calculation implementation
+  - `inv_exposure_sim.py` - Uniswap V3 LP position analysis and inventory exposure simulation
 - `config.toml` - Configuration file
 - `requirements.txt` - Python dependencies
 - `data/` - Directory containing analysis data and results
+- `inventory exposure sim/` - Directory containing LP analysis results and plots
 
 ## Setup
 
@@ -43,29 +46,17 @@ The analysis follows a specific workflow where each script takes a pool address 
 First, use the Demeter fetch script to collect raw blockchain data for a specific pool:
 
 ```bash
-python run_demeter_fetch.py <pool_address>
+python scripts/run_demeter_fetch.py
 ```
 
-**Example:**
-
-```bash
-python run_demeter_fetch.py 0x88e6a0c2ddd26feeb64f039a2c41296fcb3f5640
-```
-
-This will fetch raw data and store it in the `data/<pool_address>/` directory.
+This will fetch raw data and store it in the `data/<pool_address>/` directory based on the configuration in `config.toml`.
 
 ### 2. Combine Minute CSV Files
 
 After fetching data, combine the minute-level CSV files into consolidated datasets:
 
 ```bash
-python combine_minute_csvs.py <pool_address>
-```
-
-**Example:**
-
-```bash
-python combine_minute_csvs.py 0x88e6a0c2ddd26feeb64f039a2c41296fcb3f5640
+python scripts/combine_minute_csvs.py
 ```
 
 This creates consolidated CSV files that contain all the minute-level data for analysis.
@@ -75,13 +66,7 @@ This creates consolidated CSV files that contain all the minute-level data for a
 Generate price impact visualizations and analysis:
 
 ```bash
-python visualize_Price_impact.py <pool_address>
-```
-
-**Example:**
-
-```bash
-python visualize_Price_impact.py 0x88e6a0c2ddd26feeb64f039a2c41296fcb3f5640
+python scripts/visualize_Price_impact.py
 ```
 
 This will create comprehensive price impact analysis charts and store them in the `data/<pool_address>/` directory.
@@ -91,16 +76,20 @@ This will create comprehensive price impact analysis charts and store them in th
 Run the VPIN calculator to compute Volume-synchronized Probability of Informed Trading metrics:
 
 ```bash
-python vpin_calculator.py <pool_address>
-```
-
-**Example:**
-
-```bash
-python vpin_calculator.py 0x88e6a0c2ddd26feeb64f039a2c41296fcb3f5640
+python scripts/vpin_calculator.py
 ```
 
 This generates VPIN analysis results and stores them in the `data/<pool_address>/` directory.
+
+### 5. Run Inventory Exposure Simulation
+
+Analyze Uniswap V3 LP positions and inventory exposure:
+
+```bash
+python scripts/inv_exposure_sim.py
+```
+
+This creates comprehensive LP analysis with different range factors and saves results to the `inventory exposure sim/` directory.
 
 ## Data Organization
 
@@ -114,6 +103,14 @@ data/
 │   ├── comprehensive_price_impact_analysis_*.png
 │   └── vpin_analysis_*.csv
 └── [other_pool_addresses]/
+```
+
+LP analysis results are stored in:
+
+```
+inventory exposure sim/
+├── uniswap_v3_lp_analysis_r*.xlsx
+└── presentation_combined_plot.png
 ```
 
 ## Configuration

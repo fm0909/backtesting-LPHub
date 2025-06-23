@@ -16,7 +16,7 @@ token0_decimals = 18
 token1_decimals = 18
 
 # Path to the data folder and output file
-data_folder = os.path.join('data', pool_address)
+data_folder = os.path.join('..', 'data', pool_address)
 if not os.path.exists(data_folder):
     os.makedirs(data_folder, exist_ok=True)
 output_file = os.path.join(data_folder, f'all_days_combined_{pool_address}.csv')
