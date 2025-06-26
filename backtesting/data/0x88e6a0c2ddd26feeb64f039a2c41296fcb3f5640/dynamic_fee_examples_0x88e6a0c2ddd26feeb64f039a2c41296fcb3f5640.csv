@@ -1,0 +1,5 @@
+Scenario,Trade_Size_K,Trade_Size_Absolute,VPIN,VPIN_Category,ILLIQ,ILLIQ_Category,Real_Price_Impact,Price_Impact_Category,Inventory_Exposure,Inventory_Category,Base_Fee_Pct,VPIN_Fee_Pct,Total_Fee_Pct,Base_Fee_Absolute,VPIN_Fee_Absolute,Total_Fee_Absolute,Timestamp
+"LP Nightmare, but get Comp.",443.0,442903.08433,0.477,high,0.009,high,0.0038,high,0.509,high,0.05,0.119,0.169,221.45,528.91,750.37,2025-05-09 01:23:00
+Still competitive since VPIN low,221.0,221210.574346,0.242,low,0.007,medium,0.0016,medium,0.329,medium,0.05,0.012,0.062,110.61,26.4,137.01,2025-05-20 02:44:00
+Beating CEXs,198.0,197503.202254,0.3,medium,0.004,low,0.0008,low,0.331,medium,0.05,0.015,0.065,98.75,30.11,128.86,2025-05-30 18:45:00
+boring day,292.0,292475.700825,0.238,low,0.003,low,0.0008,low,0.272,low,0.05,0.015,0.065,146.24,43.44,189.68,2025-06-10 00:53:00
